@@ -1,0 +1,12 @@
+[submodule "external/hubble-sdk"]
+	path = external/hubble-sdk
+	url = https://github.com/HubbleNetwork/sdk
+	branch = main
+[submodule "external/nrf5-sdk"]
+	path = external/nrf5-sdk
+	url = https://github.com/greenlsi/nrf5-sdk
+	branch = main
+[submodule "external/libb64"]
+	path = external/libb64
+	url = https://github.com/libb64/libb64.git
+	branch = master

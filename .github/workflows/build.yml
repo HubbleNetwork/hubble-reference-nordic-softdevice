@@ -1,0 +1,80 @@
+# .github/workflows/build.yml
+name: Build nRF52 App
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout (including submodules)
+        uses: actions/checkout@v4
+        with:
+          # ensure submodules (external/*) are fetched
+          submodules: recursive
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Arm GNU Toolchain
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        with:
+          release: '10.3-2021.10'
+
+      - name: Toolchain debug
+        run: |
+          echo "which: $(which arm-none-eabi-gcc || true)"
+          arm-none-eabi-gcc --version || true
+
+      - name: Debug repo layout
+        run: |
+          echo "=== repo root files ==="
+          ls -la .
+          echo "=== app/ listing ==="
+          ls -la app || true
+          echo "=== external/ listing ==="
+          ls -la external || true
+
+      - name: Build app (Make)
+        env:
+          # optional: provide your real base64 key as a secret named HUBBLE_KEY
+          HUBBLE_KEY: ${{ secrets.HUBBLE_KEY }}
+        run: |
+          set -euo pipefail
+
+          # compute GNU_INSTALL_ROOT from installed gcc
+          if ! WHICH_GCC=$(which arm-none-eabi-gcc 2>/dev/null); then
+            echo "ERROR: arm-none-eabi-gcc not found in PATH"
+            exit 1
+          fi
+          GNU_INSTALL_ROOT="$(dirname "${WHICH_GCC}")/"
+          GNU_VERSION="10.3"
+
+          # epoch ms
+          TIME=$(date +%s000)
+
+          # KEY fallback (short dummy base64). Replace by setting the HUBBLE_KEY secret in repo settings.
+          KEY="${HUBBLE_KEY:-}"
+          if [ -z "$KEY" ]; then
+            echo "HUBBLE_KEY secret not set. Using a dummy key for build."
+            KEY="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+          fi
+
+          echo "GNU_INSTALL_ROOT=${GNU_INSTALL_ROOT}"
+          echo "GNU_VERSION=${GNU_VERSION}"
+          echo "TIME=${TIME}"
+          echo "Running: make -C app -j$(nproc) GNU_INSTALL_ROOT=... GNU_VERSION=... TIME=... KEY=..."
+
+          # run make in app, passing the vars the Makefile expects
+          make -C app \
+            GNU_INSTALL_ROOT="${GNU_INSTALL_ROOT}" \
+            GNU_VERSION="${GNU_VERSION}" \
+            TIME="${TIME}" \
+            KEY="${KEY}"
+
+      - name: Build summary
+        if: ${{ success() }}
+        run: echo "Build completed successfully. See logs for compiler output."
