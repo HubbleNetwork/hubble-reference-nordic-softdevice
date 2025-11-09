@@ -1,0 +1,23 @@
+# .github/workflows/clang-format.yml
+name: Clang Format
+
+on:
+  push:
+    paths:
+      - "app/**"
+  pull_request:
+    paths:
+      - "app/**"
+
+jobs:
+  clang-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check formatting with clang-format
+        uses: jidicula/clang-format-action@v4
+        with:
+          clang-format-version: "17"
+          check-path: |
+            app
