@@ -15,8 +15,8 @@
 
 #include "hubble_advertiser.h"
 #include <b64/cdecode.h>
-#include <hubble/ble.h>
-#include <hubble/hubble_port.h>
+#include <hubble/hubble.h>
+#include <hubble/port/sys.h>
 
 /*
  * These should be set in the makefile
@@ -98,7 +98,7 @@ static void idle_state_handle(void) {
   }
 }
 
-static void hubble_init(void) {
+static void hubble_stack_init(void) {
   // Decode the base64 string to the master key
   // This is optional and done to make it easier to pass keys in
   base64_decodestate s;
@@ -110,8 +110,7 @@ static void hubble_init(void) {
     return;
   }
 
-  hubble_ble_init(HUBBLE_UTC_TIME_MS);
-  hubble_ble_key_set(master_key);
+  hubble_init(HUBBLE_UTC_TIME_MS, master_key);
 
   hubble_advertiser_config_t config = {
       .interval_min = APP_ADV_INTERVAL,
@@ -134,7 +133,7 @@ int main(void) {
   leds_init();
   power_management_init();
   ble_stack_init();
-  hubble_init();
+  hubble_stack_init();
 
   // Start execution.
   NRF_LOG_INFO("Hubble reference started.");

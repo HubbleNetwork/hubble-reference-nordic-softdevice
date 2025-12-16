@@ -14,6 +14,8 @@ This repo contains a tiny example application that constructs and emits Hubble B
 
 ## Quick start (copy / paste)
 
+Before starting, you must download ```gcc-arm-none-eabi-10.3-2021.10``` and locate the instalation path to pass to ```GNU_INSTALL_ROOT```. Other revisions may work but have not been tested.
+
 ```bash
 # 1) Clone repo (with submodules)
 git clone --recurse-submodules git@github.com:HubbleNetwork/hubble-reference-nordic-softdevice.git

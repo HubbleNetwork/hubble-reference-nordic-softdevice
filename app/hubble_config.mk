@@ -8,6 +8,7 @@ LIBB64_SDK_ROOT := $(PROJ_DIR)/../external/libb64
 MBEDTLS_SDK_ROOT := $(SDK_ROOT)/external/mbedtls
 
 # Hubble Flags
+CFLAGS += -DCONFIG_HUBBLE_BLE_NETWORK
 CFLAGS += -DCONFIG_HUBBLE_KEY_SIZE=32
 CFLAGS += -DCONFIG_HUBBLE_NETWORK_KEY_256
 CFLAGS += -DCONFIG_HUBBLE_BLE_NETWORK_TIMER_COUNTER_DAILY
@@ -37,6 +38,7 @@ SRC_FILES += \
   $(MBEDTLS_SDK_ROOT)/library/gcm.c \
   $(MBEDTLS_SDK_ROOT)/library/platform_util.c \
   $(MBEDTLS_SDK_ROOT)/library/poly1305.c \
+  $(HUBBLE_SDK_ROOT)/src/hubble.c \
   $(HUBBLE_SDK_ROOT)/src/hubble_ble.c \
   $(HUBBLE_SDK_ROOT)/src/crypto/mbedtls.c \
   $(LIBB64_SDK_ROOT)/src/cdecode.c \

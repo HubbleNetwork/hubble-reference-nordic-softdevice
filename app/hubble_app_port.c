@@ -2,7 +2,7 @@
 #include "app_util_platform.h"
 #include "drv_rtc.h"
 #include "nrf_log.h"
-#include <hubble/hubble_port.h>
+#include <hubble/port/sys.h>
 #include <stdarg.h>
 
 static inline uint32_t app_timer_hz(void) {
@@ -55,7 +55,7 @@ int hubble_log(enum hubble_log_level level, const char *fmt, ...) {
   case HUBBLE_LOG_WARNING:
     NRF_LOG_WARNING("%s", owned);
     break;
-  case HUBBLE_LOG_ERR:
+  case HUBBLE_LOG_ERROR:
     NRF_LOG_ERROR("%s", owned);
     break;
   default:

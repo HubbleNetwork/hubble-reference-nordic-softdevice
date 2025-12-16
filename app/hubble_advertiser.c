@@ -1,8 +1,8 @@
 #include "hubble_advertiser.h"
 #include "nrf_sdh_ble.h"
 #include <errno.h>
-#include <hubble/ble.h>
-#include <hubble/hubble_port.h>
+#include <hubble/hubble.h>
+#include <hubble/port/sys.h>
 
 // Set up Hubble protocol advertisement buffer - this will get adjusted later
 #define AD_TYPE_COMPLETE_16BIT_UUIDS 0x03
