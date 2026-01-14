@@ -97,7 +97,7 @@ This command scans for and decodes Hubble advertisements using your device key.
 ## Application / Dependencies
 This application depends on:
 
-- [Hubble SDK](https://github.com/HubbleNetwork/sdk) - core SDK for Hubble functionality
+- [Hubble SDK](https://github.com/HubbleNetwork/hubble-device-sdk) - core SDK for Hubble functionality
 - [libb64](https://github.com/libb64/libb64) - used for decoding the Hubble key (this is just for convenience and not a requirement for Hubble functionality)
 - [nRF5-SDK](https://github.com/greenlsi/nrf5-sdk) - for Nordic SDK functionality (this is a misc mirror - for any product usage you should pull the code directly from Nordic)
 - ```MBEDTLS``` - backend for cryptography (from within the nRF5-SDK)
