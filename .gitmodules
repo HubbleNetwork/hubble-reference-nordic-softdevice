@@ -1,6 +1,6 @@
 [submodule "external/hubble-sdk"]
 	path = external/hubble-sdk
-	url = https://github.com/HubbleNetwork/sdk
+	url = https://github.com/HubbleNetwork/hubble-device-sdk
 	branch = main
 [submodule "external/nrf5-sdk"]
 	path = external/nrf5-sdk
