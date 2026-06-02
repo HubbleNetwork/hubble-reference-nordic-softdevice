@@ -21,14 +21,14 @@ Before starting, you must download ```gcc-arm-none-eabi-10.3-2021.10``` and loca
 git clone --recurse-submodules git@github.com:HubbleNetwork/hubble-reference-nordic-softdevice.git
 cd hubble-reference-nordic-softdevice/app
 
-# 2) Build (example: set toolchain root/version, epoch time in ms, and your base64 KEY)
-make GNU_INSTALL_ROOT=/opt/gcc-arm-none-eabi-10.3-2021.10/bin/ GNU_VERSION=10.3 TIME=$(date +%s%3N) KEY=<BASE64_KEY>
+# 2) Build (example: set toolchain root/version and your base64 KEY)
+make GNU_INSTALL_ROOT=/opt/gcc-arm-none-eabi-10.3-2021.10/bin/ GNU_VERSION=10.3 KEY=<BASE64_KEY>
 
 # 3) Flash SoftDevice (only required once per device / device family)
 make GNU_INSTALL_ROOT=/opt/gcc-arm-none-eabi-10.3-2021.10/bin/ GNU_VERSION=10.3 flash_softdevice
 
 # 4) Flash application
-make GNU_INSTALL_ROOT=/opt/gcc-arm-none-eabi-10.3-2021.10/bin/ GNU_VERSION=10.3 TIME=$(date +%s%3N) KEY=<BASE64_KEY> flash
+make GNU_INSTALL_ROOT=/opt/gcc-arm-none-eabi-10.3-2021.10/bin/ GNU_VERSION=10.3 KEY=<BASE64_KEY> flash
 
 # 5) Verify with Python (optional)
 pipx install pyhubblenetwork    # or: pip3 install --user pyhubblenetwork
@@ -51,19 +51,35 @@ From the app directory:
 
 ```bash
 cd app
-make GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=<GNU_VERSION> TIME=<EPOCH_TIME_MS> KEY=<BASE64_KEY>
+make GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=<GNU_VERSION> KEY=<BASE64_KEY>
 ```
 
 * ```GNU_INSTALL_ROOT```: path to the gcc-arm-none-eabi binaries (optional if installed in SDK default).
 * ```GNU_VERSION```: the GCC toolchain version string (e.g., 10.3).
-* ```TIME```: current epoch time in milliseconds. This project requires a monotonic timestamp parameter for reproducible behavior; use $(date +%s%3N) on Linux/macOS.
 * ```KEY```: your base64-encoded Hubble device key obtained when registering your device with Hubble.
 
 **Example**:
 
 ```bash
-make GNU_INSTALL_ROOT=/Applications/ARM/bin/ GNU_VERSION=10.3 TIME=1762629542000 KEY=7HLguuPSA5Y2thEfqfCwnKVELdeR+g7sGWGssI3WO0w=
+make GNU_INSTALL_ROOT=/Applications/ARM/bin/ GNU_VERSION=10.3 KEY=7HLguuPSA5Y2thEfqfCwnKVELdeR+g7sGWGssI3WO0w=
 ```
+
+### Counter source (device uptime)
+
+This reference is configured for the Hubble SDK's **device-uptime counter source**
+(```CONFIG_HUBBLE_COUNTER_SOURCE_DEVICE_UPTIME```). The Ephemeral Identifier (EID)
+counter is derived purely from device uptime, so **no real-time clock or time
+synchronization is required** — that is why there is no longer a ```TIME```/epoch
+build parameter.
+
+* ```hubble_init()``` is called with an initial counter value of ```0```, so the
+  device starts at EID counter 0 on every boot.
+* The EID rotates once per ```CONFIG_HUBBLE_EID_ROTATION_PERIOD_SEC``` (locked at
+  86400s — daily) and wraps at the fixed EID pool size of 128.
+* Because the counter restarts at 0 after a power cycle, the receiver recovers the
+  EID by scanning the 128-entry pool; no clock alignment is needed. To instead keep
+  the counter continuous across reboots, persist ```hubble_counter_get()``` to flash
+  and pass the saved value to ```hubble_init()```.
 
 ## Flashing
 Flash the SoftDevice (once per board/SoftDevice version):
@@ -75,7 +91,7 @@ make GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=<GNU_VERSION> flash_softdev
 Flash the application:
 
 ```bash
-make GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=<GNU_VERSION> TIME=<EPOCH_TIME_MS> KEY=<BASE64_KEY> flash
+make GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=<GNU_VERSION> KEY=<BASE64_KEY> flash
 ```
 
 Notes:

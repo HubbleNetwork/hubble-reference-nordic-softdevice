@@ -19,13 +19,10 @@
 #include <hubble/port/sys.h>
 
 /*
- * These should be set in the makefile
+ * This should be set in the makefile
  */
 #ifndef HUBBLE_KEY_B64_STR
 #define HUBBLE_KEY_B64_STR ""
-#endif
-#ifndef HUBBLE_UTC_TIME_MS
-#define HUBBLE_UTC_TIME_MS 0
 #endif
 
 /*
@@ -110,7 +107,12 @@ static void hubble_stack_init(void) {
     return;
   }
 
-  hubble_init(HUBBLE_UTC_TIME_MS, master_key);
+  // DEVICE_UPTIME counter source: the EID counter is derived from device
+  // uptime, so no wall-clock time is needed. The argument is the initial
+  // counter value; start a fresh device at 0. (To keep the EID counter
+  // continuous across reboots instead, persist hubble_counter_get() to flash
+  // and pass the saved value here.)
+  hubble_init(0, master_key);
 
   hubble_advertiser_config_t config = {
       .interval_min = APP_ADV_INTERVAL,
