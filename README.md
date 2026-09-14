@@ -51,12 +51,32 @@ From the app directory:
 
 ```bash
 cd app
-make GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=<GNU_VERSION> KEY=<BASE64_KEY>
+make GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=<GNU_VERSION> KEY=<BASE64_KEY> [BOARD=<BOARD>]
 ```
 
 * ```GNU_INSTALL_ROOT```: path to the gcc-arm-none-eabi binaries (optional if installed in SDK default).
 * ```GNU_VERSION```: the GCC toolchain version string (e.g., 10.3).
 * ```KEY```: your base64-encoded Hubble device key obtained when registering your device with Hubble.
+* ```BOARD```: target board (optional, defaults to ```pca10056```).
+
+### Supported boards
+
+| ```BOARD``` | Kit | SoC | SoftDevice | Build output |
+|---|---|---|---|---|
+| ```pca10056``` (default) | nRF52840-DK | nRF52840 | S140 7.2.0 | ```_build/nrf52840_xxaa.hex``` |
+| ```pca10040``` | nRF52-DK | nRF52832 | S132 7.2.0 | ```_build/nrf52832_xxaa.hex``` |
+
+```BOARD``` selects the SoC and board defines, the MDK startup/system files, the
+SoftDevice headers and hex, and the linker script. It must be passed to every
+```make``` invocation for a given board, including ```flash``` and
+```flash_softdevice``` — otherwise you will flash the wrong SoftDevice. Example
+for the nRF52-DK:
+
+```bash
+make BOARD=pca10040 GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=10.3 KEY=<BASE64_KEY>
+make BOARD=pca10040 GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=10.3 flash_softdevice
+make BOARD=pca10040 GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=10.3 KEY=<BASE64_KEY> flash
+```
 
 **Example**:
 
@@ -95,6 +115,7 @@ make GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=<GNU_VERSION> KEY=<BASE64_K
 ```
 
 Notes:
+* Pass the same ```BOARD=``` value you built with (see **Supported boards** above). The ```flash_softdevice``` target programs the SoftDevice that matches ```BOARD```, so omitting it on an nRF52-DK would flash S140 onto an nRF52832.
 * The SoftDevice only needs programming once for a given part or device family. See ```flash_softdevice``` target for exact behavior.
 README
 * If flashing fails or nrfjprog cannot find the device, confirm Segger drivers are installed and try ```nrfjprog --recover`` or reconnecting the device.
