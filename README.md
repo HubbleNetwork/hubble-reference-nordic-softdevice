@@ -84,6 +84,41 @@ make BOARD=pca10040 GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=10.3 KEY=<BA
 make GNU_INSTALL_ROOT=/Applications/ARM/bin/ GNU_VERSION=10.3 KEY=7HLguuPSA5Y2thEfqfCwnKVELdeR+g7sGWGssI3WO0w=
 ```
 
+### Port layer
+
+```app/hubble_app_port.c``` implements the system abstraction the SDK expects from
+the application (```hubble/port/sys.h```):
+
+* ```hubble_uptime_get()``` — monotonic milliseconds, built on ```app_timer``` with
+  RTC rollover tracking.
+* ```hubble_log()``` — forwards to ```NRF_LOG```.
+* ```hubble_lock_init()``` / ```hubble_lock()``` / ```hubble_unlock()``` — required
+  since SDK v3.0.0. ```hubble_ble_advertise_get()``` allocates the sequence number
+  and validates the nonce under this lock, and both the main thread and the
+  ```app_timer``` handler reach that path in this app.
+
+  The implementation uses a SoftDevice critical region
+  (```app_util_critical_region_enter/exit```) rather than a mutex: it cannot
+  deadlock when taken from the timer interrupt, and the only state it guards — the
+  SDK's default RAM sequence counter — never blocks. If you replace
+  ```hubble_sequence_counter_get()``` with one that can block (persisting the
+  counter to flash, say), switch to a blocking-capable recursive mutex as
+  ```sys.h``` requires. Note that ```CRITICAL_REGION_ENTER/EXIT``` cannot be used
+  directly here: under ```SOFTDEVICE_PRESENT``` they are brace-scoped macros that
+  keep the nesting flag in a local, so they cannot be split across two functions.
+
+```hubble_sequence_counter_get()``` is left to the SDK default (a RAM counter), so
+the sequence restarts at 0 on every boot.
+
+### Device configuration vector
+
+On boot the SDK logs its configuration vector, which is a quick way to confirm the
+build matches what the Cloud recorded for the device:
+
+```
+Hubble Device SDK initialized (HDCV:1.0/E:256/CS:DU/EC:128/RP:S86400/N:T/TV:0)
+```
+
 ### Counter source (device uptime)
 
 This reference is configured for the Hubble SDK's **device-uptime counter source**
@@ -178,7 +213,7 @@ Expected output for a working device (```DECRYPT``` column via
 ## Application / Dependencies
 This application depends on:
 
-- [Hubble SDK](https://github.com/HubbleNetwork/hubble-device-sdk) - core SDK for Hubble functionality
+- [Hubble Device SDK](https://github.com/HubbleNetwork/hubble-device-sdk) - core SDK for Hubble functionality (pinned to **v3.0.0**)
 - [libb64](https://github.com/libb64/libb64) - used for decoding the Hubble key (this is just for convenience and not a requirement for Hubble functionality)
 - [nRF5-SDK](https://github.com/greenlsi/nrf5-sdk) - for Nordic SDK functionality (this is a misc mirror - for any product usage you should pull the code directly from Nordic)
 - ```MBEDTLS``` - backend for cryptography (from within the nRF5-SDK)
