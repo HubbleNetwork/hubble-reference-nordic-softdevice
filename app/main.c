@@ -8,6 +8,7 @@
 #include "nrf_soc.h"
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
@@ -29,6 +30,26 @@
  * We will decode the HUBBLE_KEY_B64_STR config into this
  */
 static uint8_t master_key[CONFIG_HUBBLE_KEY_SIZE];
+
+/*
+ * Bounds for decoding HUBBLE_KEY_B64_STR.
+ *
+ * Base64 encodes 3 bytes per 4 characters, so a correctly encoded
+ * CONFIG_HUBBLE_KEY_SIZE-byte key is at most KEY_B64_MAX_CHARS characters
+ * including '=' padding (44 for a 32-byte key).
+ *
+ * libb64 ignores padding and emits 6 bits per input character, so that many
+ * characters can decode to slightly more than CONFIG_HUBBLE_KEY_SIZE bytes
+ * (33 for a 32-byte key). KEY_DECODE_BUF_SIZE covers that worst case so the
+ * decode cannot overrun its destination before the length is validated.
+ *
+ * The trailing +1 is for libb64 itself: base64_decode_block() ends a block by
+ * saving the byte it would write next (state_in->plainchar = *plainchar),
+ * which reads one past the last byte decoded. Without the slack, a
+ * maximum-length key reads off the end of the buffer.
+ */
+#define KEY_B64_MAX_CHARS (((CONFIG_HUBBLE_KEY_SIZE + 2) / 3) * 4)
+#define KEY_DECODE_BUF_SIZE (((KEY_B64_MAX_CHARS * 6) / 8) + 1)
 
 /*
  * The interval at which we will update what is in the
@@ -98,14 +119,29 @@ static void idle_state_handle(void) {
 static void hubble_stack_init(void) {
   // Decode the base64 string to the master key
   // This is optional and done to make it easier to pass keys in
-  base64_decodestate s;
-  base64_init_decodestate(&s);
-  size_t cnt = base64_decode_block(HUBBLE_KEY_B64_STR,
-                                   strlen(HUBBLE_KEY_B64_STR), master_key, &s);
-  if (cnt != CONFIG_HUBBLE_KEY_SIZE) {
-    NRF_LOG_ERROR("Incorrect key size passed");
+  //
+  // Decode into a scratch buffer rather than straight into master_key: libb64
+  // writes as it goes and has no output bound, so an over-long KEY would run
+  // past the end of the destination before we ever got to check the length.
+  // Base64 yields at most 3 bytes per 4 input chars, so cap the input length
+  // that can produce a CONFIG_HUBBLE_KEY_SIZE key and reject anything longer.
+  const size_t key_b64_len = strlen(HUBBLE_KEY_B64_STR);
+  if (key_b64_len > KEY_B64_MAX_CHARS) {
+    NRF_LOG_ERROR("Key too long: %u encoded chars (max %u)",
+                  (unsigned)key_b64_len, (unsigned)KEY_B64_MAX_CHARS);
     return;
   }
+
+  uint8_t key_buf[KEY_DECODE_BUF_SIZE];
+  base64_decodestate s;
+  base64_init_decodestate(&s);
+  size_t cnt = base64_decode_block(HUBBLE_KEY_B64_STR, key_b64_len, key_buf, &s);
+  if (cnt != CONFIG_HUBBLE_KEY_SIZE) {
+    NRF_LOG_ERROR("Incorrect key size: decoded %u bytes, expected %u",
+                  (unsigned)cnt, (unsigned)CONFIG_HUBBLE_KEY_SIZE);
+    return;
+  }
+  memcpy(master_key, key_buf, CONFIG_HUBBLE_KEY_SIZE);
 
   // DEVICE_UPTIME counter source: the EID counter is derived from device
   // uptime, so no wall-clock time is needed. The argument is the initial
