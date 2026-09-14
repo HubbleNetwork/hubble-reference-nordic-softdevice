@@ -53,26 +53,21 @@ jobs:
           GNU_INSTALL_ROOT="$(dirname "${WHICH_GCC}")/"
           GNU_VERSION="10.3"
 
-          # epoch ms
-          TIME=$(date +%s000)
-
           # KEY fallback (short dummy base64). Replace by setting the HUBBLE_KEY secret in repo settings.
           KEY="${HUBBLE_KEY:-}"
           if [ -z "$KEY" ]; then
             echo "HUBBLE_KEY secret not set. Using a dummy key for build."
-            KEY="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+            KEY="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
           fi
 
           echo "GNU_INSTALL_ROOT=${GNU_INSTALL_ROOT}"
           echo "GNU_VERSION=${GNU_VERSION}"
-          echo "TIME=${TIME}"
-          echo "Running: make -C app -j$(nproc) GNU_INSTALL_ROOT=... GNU_VERSION=... TIME=... KEY=..."
+          echo "Running: make -C app GNU_INSTALL_ROOT=... GNU_VERSION=... KEY=..."
 
           # run make in app, passing the vars the Makefile expects
           make -C app \
             GNU_INSTALL_ROOT="${GNU_INSTALL_ROOT}" \
             GNU_VERSION="${GNU_VERSION}" \
-            TIME="${TIME}" \
             KEY="${KEY}"
 
       - name: Build summary
