@@ -54,10 +54,14 @@ int hubble_advertiser_stop(void) {
 
 int hubble_advertiser_update_data(const uint8_t *data, size_t len) {
   size_t out_len = sizeof(_hubble_adv_buffer) - 6;
-  if (hubble_ble_advertise_get(data, len, &_hubble_adv_buffer[6], &out_len) !=
-      0) {
-    HUBBLE_LOG_WARNING("Failed to generate Hubble advertisement");
-    return -EINVAL;
+  int ret =
+      hubble_ble_advertise_get(data, len, &_hubble_adv_buffer[6], &out_len);
+  if (ret != 0) {
+    // -EPERM means the SDK refused to reuse a nonce it has already issued.
+    // Leave the previous advertisement on air rather than replacing it with
+    // one that reuses the AES-CTR keystream.
+    HUBBLE_LOG_WARNING("Failed to generate Hubble advertisement (err=%d)", ret);
+    return ret;
   }
   _hubble_adv_buffer[4] = out_len + 1;
 
