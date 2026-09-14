@@ -1,18 +1,50 @@
-PROJECT_NAME     := ble_app_beacon_pca10056_s140
-TARGETS          := nrf52840_xxaa
+# Board selection. Supported boards:
+#   pca10056 - nRF52840-DK (nRF52832's bigger sibling), SoftDevice S140 (default)
+#   pca10040 - nRF52-DK    (nRF52832),                  SoftDevice S132
+# Override on the command line, e.g. `make BOARD=pca10040 ...`
+BOARD ?= pca10056
+
+ifeq ($(BOARD),pca10056)
+  TARGET_NAME        := nrf52840_xxaa
+  BOARD_DEFINE       := BOARD_PCA10056
+  MCU_DEFINE         := NRF52840_XXAA
+  # Nordic's MDK startup/system files are named after the SoC.
+  MDK_NAME           := nrf52840
+  SD_NAME            := s140
+  SD_DEFINE          := S140
+  SD_HEX_NAME        := s140_nrf52_7.2.0_softdevice.hex
+  LINKER_SCRIPT_NAME := hubble_app_reference_nrf52840.ld
+else ifeq ($(BOARD),pca10040)
+  TARGET_NAME        := nrf52832_xxaa
+  BOARD_DEFINE       := BOARD_PCA10040
+  MCU_DEFINE         := NRF52832_XXAA
+  # Note: the nRF52832 MDK files are plain "nrf52", not "nrf52832".
+  MDK_NAME           := nrf52
+  SD_NAME            := s132
+  SD_DEFINE          := S132
+  SD_HEX_NAME        := s132_nrf52_7.2.0_softdevice.hex
+  LINKER_SCRIPT_NAME := hubble_app_reference_nrf52832.ld
+else
+  $(error Unsupported BOARD '$(BOARD)' - use pca10056 (nRF52840-DK) or pca10040 (nRF52-DK))
+endif
+
+PROJECT_NAME     := ble_app_beacon_$(BOARD)_$(SD_NAME)
+TARGETS          := $(TARGET_NAME)
 OUTPUT_DIRECTORY := _build
 
 SDK_ROOT := ../external/nrf5-sdk
 PROJ_DIR := .
 
+SD_HEX := $(SDK_ROOT)/components/softdevice/$(SD_NAME)/hex/$(SD_HEX_NAME)
+
 include $(PROJ_DIR)/hubble_config.mk
 
-$(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
-  LINKER_SCRIPT  := hubble_app_reference_nrf52840.ld
+$(OUTPUT_DIRECTORY)/$(TARGET_NAME).out: \
+  LINKER_SCRIPT  := $(LINKER_SCRIPT_NAME)
 
 # Source files common to all targets
 SRC_FILES += \
-  $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.S \
+  $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_$(MDK_NAME).S \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_rtt.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_serial.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_uart.c \
@@ -40,7 +72,7 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/experimental_section_vars/nrf_section_iter.c \
   $(SDK_ROOT)/components/libraries/sortlist/nrf_sortlist.c \
   $(SDK_ROOT)/components/libraries/strerror/nrf_strerror.c \
-  $(SDK_ROOT)/modules/nrfx/mdk/system_nrf52840.c \
+  $(SDK_ROOT)/modules/nrfx/mdk/system_$(MDK_NAME).c \
   $(SDK_ROOT)/components/boards/boards.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
@@ -92,7 +124,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/modules/nrfx/drivers/include \
   $(SDK_ROOT)/components/libraries/experimental_task_manager \
   $(SDK_ROOT)/components/ble/ble_services/ble_hrs_c \
-  $(SDK_ROOT)/components/softdevice/s140/headers/nrf52 \
+  $(SDK_ROOT)/components/softdevice/$(SD_NAME)/headers/nrf52 \
   $(SDK_ROOT)/components/nfc/ndef/connection_handover/le_oob_rec \
   $(SDK_ROOT)/components/libraries/queue \
   $(SDK_ROOT)/components/libraries/pwr_mgmt \
@@ -138,7 +170,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/ble/ble_services/ble_cscs \
   $(SDK_ROOT)/components/libraries/hci \
   $(SDK_ROOT)/components/libraries/timer \
-  $(SDK_ROOT)/components/softdevice/s140/headers \
+  $(SDK_ROOT)/components/softdevice/$(SD_NAME)/headers \
   $(SDK_ROOT)/integration/nrfx \
   $(SDK_ROOT)/components/nfc/t4t_parser/tlv \
   $(SDK_ROOT)/components/libraries/sortlist \
@@ -204,12 +236,12 @@ OPT = -O3 -g3
 CFLAGS += $(OPT)
 CFLAGS += -DAPP_TIMER_V2
 CFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
-CFLAGS += -DBOARD_PCA10056
+CFLAGS += -D$(BOARD_DEFINE)
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DFLOAT_ABI_HARD
-CFLAGS += -DNRF52840_XXAA
+CFLAGS += -D$(MCU_DEFINE)
 CFLAGS += -DNRF_SD_BLE_API_VERSION=7
-CFLAGS += -DS140
+CFLAGS += -D$(SD_DEFINE)
 CFLAGS += -DSOFTDEVICE_PRESENT
 CFLAGS += -mcpu=cortex-m4
 CFLAGS += -mthumb -mabi=aapcs
@@ -228,12 +260,12 @@ ASMFLAGS += -mthumb -mabi=aapcs
 ASMFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 ASMFLAGS += -DAPP_TIMER_V2
 ASMFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
-ASMFLAGS += -DBOARD_PCA10056
+ASMFLAGS += -D$(BOARD_DEFINE)
 ASMFLAGS += -DCONFIG_GPIO_AS_PINRESET
 ASMFLAGS += -DFLOAT_ABI_HARD
-ASMFLAGS += -DNRF52840_XXAA
+ASMFLAGS += -D$(MCU_DEFINE)
 ASMFLAGS += -DNRF_SD_BLE_API_VERSION=7
-ASMFLAGS += -DS140
+ASMFLAGS += -D$(SD_DEFINE)
 ASMFLAGS += -DSOFTDEVICE_PRESENT
 
 # Linker flags
@@ -246,10 +278,10 @@ LDFLAGS += -Wl,--gc-sections
 # use newlib in nano version
 LDFLAGS += --specs=nano.specs
 
-nrf52840_xxaa: CFLAGS += -D__HEAP_SIZE=8192
-nrf52840_xxaa: CFLAGS += -D__STACK_SIZE=8192
-nrf52840_xxaa: ASMFLAGS += -D__HEAP_SIZE=8192
-nrf52840_xxaa: ASMFLAGS += -D__STACK_SIZE=8192
+$(TARGET_NAME): CFLAGS += -D__HEAP_SIZE=8192
+$(TARGET_NAME): CFLAGS += -D__STACK_SIZE=8192
+$(TARGET_NAME): ASMFLAGS += -D__HEAP_SIZE=8192
+$(TARGET_NAME): ASMFLAGS += -D__STACK_SIZE=8192
 
 # Add standard libraries at the very end of the linker input, after all objects
 # that may need symbols provided by these libraries.
@@ -259,12 +291,12 @@ LIB_FILES += -lc -lnosys -lm
 .PHONY: default help
 
 # Default target - first one defined
-default: nrf52840_xxaa
+default: $(TARGET_NAME)
 
 # Print all targets that can be built
 help:
 	@echo following targets are available:
-	@echo		nrf52840_xxaa
+	@echo		$(TARGET_NAME)
 	@echo		flash_softdevice
 	@echo		sdk_config - starting external tool for editing sdk_config.h
 	@echo		flash      - flashing binary
@@ -280,14 +312,14 @@ $(foreach target, $(TARGETS), $(call define_target, $(target)))
 
 # Flash the program
 flash: default
-	@echo Flashing: $(OUTPUT_DIRECTORY)/nrf52840_xxaa.hex
-	nrfjprog -f nrf52 --program $(OUTPUT_DIRECTORY)/nrf52840_xxaa.hex --sectorerase
+	@echo Flashing: $(OUTPUT_DIRECTORY)/$(TARGET_NAME).hex
+	nrfjprog -f nrf52 --program $(OUTPUT_DIRECTORY)/$(TARGET_NAME).hex --sectorerase
 	nrfjprog -f nrf52 --reset
 
 # Flash softdevice
 flash_softdevice:
-	@echo Flashing: s140_nrf52_7.2.0_softdevice.hex
-	nrfjprog -f nrf52 --program $(SDK_ROOT)/components/softdevice/s140/hex/s140_nrf52_7.2.0_softdevice.hex --sectorerase
+	@echo Flashing: $(SD_HEX_NAME)
+	nrfjprog -f nrf52 --program $(SD_HEX) --sectorerase
 	nrfjprog -f nrf52 --reset
 
 erase:
