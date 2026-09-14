@@ -81,6 +81,22 @@ build parameter.
   the counter continuous across reboots, persist ```hubble_counter_get()``` to flash
   and pass the saved value to ```hubble_init()```.
 
+### Nonce reuse checking
+
+```CONFIG_HUBBLE_NETWORK_SECURITY_ENFORCE_NONCE_CHECK``` is enabled in
+```app/hubble_config.mk```. The SDK's Kconfig turns this on by default, but a
+bare-metal build has no Kconfig, so it must be set explicitly or the check is
+silently compiled out.
+
+With it enabled, ```hubble_ble_advertise_get()``` returns ```-EPERM``` rather than
+emitting an advertisement that reuses an ```(EID counter, sequence number)``` nonce
+— which would reuse the AES-CTR keystream. ```hubble_advertiser_update_data()```
+logs the error and leaves the previous advertisement on air.
+
+The default 5-minute refresh means ~288 advertisements per EID rotation period,
+well under the 1024-entry sequence space, so the check should not fire in normal
+operation.
+
 ## Flashing
 Flash the SoftDevice (once per board/SoftDevice version):
 
@@ -104,10 +120,38 @@ After flashing, you can verify that Hubble packets are being constructed and bro
 
 ```bash
 pipx install pyhubblenetwork
-hubblenetwork ble scan -k <YOUR_BASE64_KEY>
+hubblenetwork ble scan -k <YOUR_BASE64_KEY> --counter-mode device_uptime
 ```
 
 This command scans for and decodes Hubble advertisements using your device key.
+
+> **```--counter-mode device_uptime``` is required.** This firmware derives its EID
+> counter from device uptime (see **Counter source** above), but ```ble scan```
+> defaults to ```--counter-mode unix_time```. Without the flag every packet fails
+> to decrypt even though the key is correct — verified: in ```unix_time``` mode the
+> same key failed on 100% of packets from this device.
+
+Expected output for a working device (```DECRYPT``` column via
+```--show-failed-decryption```):
+
+```
+# freshly reset device (uptime < 5 min)
+| DECRYPT | RSSI | VERSION | EID      | TAG      | COUNTER | SALT/SEQ | PAYLOAD |
+| OK      | -43  | 0       | e96073a9 | b22658a4 | 0       | 0        |         |
+
+# after the first refresh timer fire (uptime >= 5 min)
+| DECRYPT | RSSI | VERSION | EID      | TAG      | COUNTER | SALT/SEQ | PAYLOAD |
+| OK      | -43  | 0       | e96073a9 | b22658a4 | 0       | 1        | 300     |
+```
+
+* ```COUNTER``` is ```0``` until the device has been up for a full EID rotation
+  period (86400s), then increments and wraps at 128.
+* ```PAYLOAD``` is **empty for the first 5 minutes** after boot. The application
+  seeds the advertisement with no payload in ```hubble_advertiser_init()``` and only
+  writes the uptime string when the ```ADV_UPDATE_INTERVAL_MS``` timer first fires.
+  An empty payload on a freshly reset device is expected, not a failure.
+* ```SALT/SEQ``` increments each time the advertisement is regenerated, so it is
+  the quickest way to confirm the refresh timer is running.
 
 
 ## Application / Dependencies

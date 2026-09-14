@@ -18,6 +18,11 @@ CFLAGS += -DCONFIG_HUBBLE_NETWORK_KEY_256
 # CONFIG_HUBBLE_EID_ROTATION_PERIOD_SEC is currently locked to 86400 (daily).
 CFLAGS += -DCONFIG_HUBBLE_COUNTER_SOURCE_DEVICE_UPTIME
 CFLAGS += -DCONFIG_HUBBLE_EID_ROTATION_PERIOD_SEC=86400
+# Reject a nonce (counter, sequence number) that has already been used, rather
+# than emitting an advertisement that reuses the AES-CTR keystream. The SDK's
+# Kconfig defaults this on; a bare-metal build has no Kconfig, so it has to be
+# set here or the check is silently compiled out.
+CFLAGS += -DCONFIG_HUBBLE_NETWORK_SECURITY_ENFORCE_NONCE_CHECK
 
 # Misc application configuration values
 CFLAGS += -DAPP_ADV_INTERVAL=500 # units of 625us
