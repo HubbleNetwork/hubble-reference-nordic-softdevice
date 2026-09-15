@@ -216,7 +216,7 @@ This application depends on:
 - [Hubble Device SDK](https://github.com/HubbleNetwork/hubble-device-sdk) - core SDK for Hubble functionality (pinned to **v3.0.0**)
 - [libb64](https://github.com/libb64/libb64) - used for decoding the Hubble key (this is just for convenience and not a requirement for Hubble functionality)
 - [nRF5-SDK](https://github.com/greenlsi/nrf5-sdk) - for Nordic SDK functionality (this is a misc mirror - for any product usage you should pull the code directly from Nordic)
-- ```MBEDTLS``` - backend for cryptography (from within the nRF5-SDK)
+- ```MBEDTLS``` - backend for cryptography (from within the nRF5-SDK, built with the minimal config in ```app/mbedtls_config_hubble.h```)
 
 
 ## Troubleshooting

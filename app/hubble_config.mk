@@ -27,28 +27,15 @@ CFLAGS += -DCONFIG_HUBBLE_NETWORK_SECURITY_ENFORCE_NONCE_CHECK
 # Misc application configuration values
 CFLAGS += -DAPP_ADV_INTERVAL=500 # units of 625us
 
-# MBEDTLS Flags
-CFLAGS += -DMMBEDTLS
-CFLAGS += -DMBEDTLS_CIPHER
-CFLAGS += -DMBEDTLS_CMAC
-CFLAGS += -DMBEDTLS_CMAC_C
-CFLAGS += -DMBEDTLS_CIPHER_AES
+# MBEDTLS config, keep in sync with the mbedtls sources below
+CFLAGS += -DMBEDTLS_CONFIG_FILE=\"mbedtls_config_hubble.h\"
 
 SRC_FILES += \
   $(MBEDTLS_SDK_ROOT)/library/aes.c \
-  $(MBEDTLS_SDK_ROOT)/library/arc4.c \
-  $(MBEDTLS_SDK_ROOT)/library/blowfish.c \
-  $(MBEDTLS_SDK_ROOT)/library/camellia.c \
-  $(MBEDTLS_SDK_ROOT)/library/ccm.c \
-  $(MBEDTLS_SDK_ROOT)/library/chacha20.c \
-  $(MBEDTLS_SDK_ROOT)/library/chachapoly.c \
   $(MBEDTLS_SDK_ROOT)/library/cipher.c \
   $(MBEDTLS_SDK_ROOT)/library/cipher_wrap.c \
   $(MBEDTLS_SDK_ROOT)/library/cmac.c \
-  $(MBEDTLS_SDK_ROOT)/library/des.c \
-  $(MBEDTLS_SDK_ROOT)/library/gcm.c \
   $(MBEDTLS_SDK_ROOT)/library/platform_util.c \
-  $(MBEDTLS_SDK_ROOT)/library/poly1305.c \
   $(HUBBLE_SDK_ROOT)/src/hubble.c \
   $(HUBBLE_SDK_ROOT)/src/hubble_ble.c \
   $(HUBBLE_SDK_ROOT)/src/hubble_crypto.c \

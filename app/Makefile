@@ -308,6 +308,11 @@ include $(TEMPLATE_PATH)/Makefile.common
 
 $(foreach target, $(TARGETS), $(call define_target, $(target)))
 
+# Makefile.common only tracks Makefile; also rebuild on hubble_config.mk changes
+$(foreach target, $(TARGETS), \
+  $(foreach src_file, $(SRC_FILES), \
+    $(eval $(call get_object_file_name, $(target), $(src_file)): hubble_config.mk)))
+
 .PHONY: flash flash_softdevice erase
 
 # Flash the program
