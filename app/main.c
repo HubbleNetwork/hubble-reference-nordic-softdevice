@@ -135,7 +135,8 @@ static void hubble_stack_init(void) {
   uint8_t key_buf[KEY_DECODE_BUF_SIZE];
   base64_decodestate s;
   base64_init_decodestate(&s);
-  size_t cnt = base64_decode_block(HUBBLE_KEY_B64_STR, key_b64_len, key_buf, &s);
+  size_t cnt =
+      base64_decode_block(HUBBLE_KEY_B64_STR, key_b64_len, key_buf, &s);
   if (cnt != CONFIG_HUBBLE_KEY_SIZE) {
     NRF_LOG_ERROR("Incorrect key size: decoded %u bytes, expected %u",
                   (unsigned)cnt, (unsigned)CONFIG_HUBBLE_KEY_SIZE);
