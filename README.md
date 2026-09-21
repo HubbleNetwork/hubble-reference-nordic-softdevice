@@ -58,6 +58,8 @@ make GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=<GNU_VERSION> KEY=<BASE64_K
 * ```GNU_VERSION```: the GCC toolchain version string (e.g., 10.3).
 * ```KEY```: your base64-encoded Hubble device key obtained when registering your device with Hubble.
 * ```BOARD```: target board (optional, defaults to ```pca10056```).
+* ```HUBBLE_CRYPTO```: crypto backend (optional). One of ```cc310```, ```nrf```, ```mbedtls```. Defaults to ```cc310``` on ```pca10056``` and ```mbedtls``` elsewhere. See **Crypto backend** below.
+* ```NRF_CRYPTO_BACKEND```: backend used when ```HUBBLE_CRYPTO=nrf``` (optional). One of ```cc310```, ```mbedtls```. Defaults to ```cc310``` on ```pca10056``` and ```mbedtls``` elsewhere.
 
 ### Supported boards
 
@@ -152,6 +154,55 @@ The default 5-minute refresh means ~288 advertisements per EID rotation period,
 well under the 1024-entry sequence space, so the check should not fire in normal
 operation.
 
+### Crypto backend
+
+```HUBBLE_CRYPTO``` selects which crypto implementation is compiled in. Override
+it on any ```make``` invocation. The default is ```cc310``` on ```pca10056``` and
+```mbedtls``` on every other board.
+
+| ```HUBBLE_CRYPTO``` | Implementation | AES key size | Boards |
+|---|---|---|---|
+| ```cc310``` | Direct CryptoCell (```SaSi_Aes*```) driver | AES-256 | ```pca10056``` only |
+| ```nrf``` | nRF5 SDK ```nrf_crypto``` wrapper API | AES-128 | any (backend-dependent) |
+| ```mbedtls``` | Raw mbedTLS software | AES-256 | any |
+
+* ```cc310``` and ```nrf``` (with its CryptoCell backend) both run on the nRF52840's
+  CryptoCell hardware, so they require ```BOARD=pca10056``` — the nRF52832 has no
+  CryptoCell. The build errors out if you request them on another board.
+* ```nrf``` uses the backend-agnostic ```nrf_crypto_aes_crypt()``` API and picks up
+  the SDK's mutex, RAM-location check, and DMA chunking. It is locked to a 128-bit
+  key because the ```nrf_crypto``` backends only register 128-bit AES-CTR/CMAC
+  descriptors.
+* ```mbedtls``` is pure software and works on any board. It is the only option on
+  ```pca10040```.
+
+When ```HUBBLE_CRYPTO=nrf```, ```NRF_CRYPTO_BACKEND``` chooses which backend
+actually implements the AES primitives:
+
+| ```NRF_CRYPTO_BACKEND``` | Implementation | Boards |
+|---|---|---|
+| ```cc310``` | CryptoCell hardware | ```pca10056``` only |
+| ```mbedtls``` | Software (mbedTLS) via the ```nrf_crypto``` wrapper | any |
+
+It defaults to ```cc310``` on ```pca10056``` and ```mbedtls``` elsewhere. The wire
+format stays 128-bit regardless of which backend you pick.
+
+Examples:
+
+```bash
+# nRF52840 with the nrf_crypto wrapper over the software mbedTLS backend
+make GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=10.3 KEY=<BASE64_KEY> \
+  HUBBLE_CRYPTO=nrf NRF_CRYPTO_BACKEND=mbedtls
+
+# nRF52-DK, software mbedTLS (the default there)
+make BOARD=pca10040 GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=10.3 KEY=<BASE64_KEY> \
+  HUBBLE_CRYPTO=mbedtls
+```
+
+> **The key size differs by backend.** ```cc310``` and ```mbedtls``` use AES-256;
+> ```nrf``` uses AES-128. The base64 ```KEY``` you pass is the same, but make sure
+> the backend you build matches how your device is registered with Hubble.
+
 ## Flashing
 Flash the SoftDevice (once per board/SoftDevice version):
 
@@ -216,8 +267,10 @@ This application depends on:
 - [Hubble Device SDK](https://github.com/HubbleNetwork/hubble-device-sdk) - core SDK for Hubble functionality (pinned to **v3.0.0**)
 - [libb64](https://github.com/libb64/libb64) - used for decoding the Hubble key (this is just for convenience and not a requirement for Hubble functionality)
 - [nRF5-SDK](https://github.com/greenlsi/nrf5-sdk) - for Nordic SDK functionality (this is a misc mirror - for any product usage you should pull the code directly from Nordic)
-- ```MBEDTLS``` - backend for cryptography (from within the nRF5-SDK, built with the minimal config in ```app/mbedtls_config_hubble.h```)
-
+- Crypto backend (selected with ```HUBBLE_CRYPTO``` — see **Crypto backend** above). Options come from within the nRF5-SDK:
+    - ```mbedtls``` - software mbedTLS
+    - ```cc310``` - the nRF52840 CryptoCell hardware driver (```nrf_cc310``` prebuilt library)
+    - ```nrf``` - the SDK's ```nrf_crypto``` wrapper over either CryptoCell or mbedTLS
 
 ## Troubleshooting
 * **Build errors referencing toolchain**: confirm ```GNU_INSTALL_ROOT``` and ```GNU_VERSION``` are correct and GCC is installed.
