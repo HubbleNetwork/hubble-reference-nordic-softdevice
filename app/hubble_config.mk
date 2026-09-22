@@ -6,6 +6,7 @@ HUBBLE_SDK_ROOT := $(PROJ_DIR)/../external/hubble-sdk
 LIBB64_SDK_ROOT := $(PROJ_DIR)/../external/libb64
 MBEDTLS_SDK_ROOT := $(SDK_ROOT)/external/mbedtls
 CC310_SDK_ROOT := $(SDK_ROOT)/external/nrf_cc310
+OBERON_SDK_ROOT := $(SDK_ROOT)/external/nrf_oberon
 
 # Hubble Flags
 CFLAGS += -DCONFIG_HUBBLE_BLE_NETWORK
@@ -52,6 +53,9 @@ INC_FOLDERS += \
 #              Requires pca10056. Same hardware path as `cc310`, but uses the
 #              backend-agnostic nrf_crypto_aes_crypt() API and picks up the
 #              SDK's mutex, RAM-location check, and DMA chunking.
+#   oberon   - Prebuilt Oberon ocrypto software library (AES-256). Any board.
+#              Raw ocrypto_aes_* calls, no nrf_crypto wrapper; smaller than the
+#              full mbedTLS cipher family.
 #   mbedtls  - Raw mbedTLS software. AES-256. Any board. Only option on
 #              pca10040 (no CryptoCell).
 #
@@ -242,6 +246,19 @@ else
 $(error Unknown NRF_CRYPTO_BACKEND='$(NRF_CRYPTO_BACKEND)'; valid values: cc310, mbedtls)
 endif
 
+else ifeq ($(HUBBLE_CRYPTO),oberon)
+
+CFLAGS += -DCONFIG_HUBBLE_KEY_SIZE=32
+CFLAGS += -DCONFIG_HUBBLE_NETWORK_KEY_256
+
+SRC_FILES += \
+  $(PROJ_DIR)/hubble_crypto_oberon.c \
+
+INC_FOLDERS += \
+  $(OBERON_SDK_ROOT)/include \
+
+LIB_FILES += $(OBERON_SDK_ROOT)/lib/cortex-m4/hard-float/liboberon_3.0.8.a
+
 else ifeq ($(HUBBLE_CRYPTO),mbedtls)
 
 # ---- mbedtls: pure software, AES-256 -------------------------------------
@@ -262,5 +279,5 @@ INC_FOLDERS += \
   $(MBEDTLS_SDK_ROOT)/include \
 
 else
-$(error Unknown HUBBLE_CRYPTO='$(HUBBLE_CRYPTO)'; valid values: cc310, nrf, mbedtls)
+$(error Unknown HUBBLE_CRYPTO='$(HUBBLE_CRYPTO)'; valid values: cc310, nrf, oberon, mbedtls)
 endif
