@@ -58,7 +58,7 @@ make GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=<GNU_VERSION> KEY=<BASE64_K
 * ```GNU_VERSION```: the GCC toolchain version string (e.g., 10.3).
 * ```KEY```: your base64-encoded Hubble device key obtained when registering your device with Hubble.
 * ```BOARD```: target board (optional, defaults to ```pca10056```).
-* ```HUBBLE_CRYPTO```: crypto backend (optional). One of ```cc310```, ```nrf```, ```mbedtls```. Defaults to ```cc310``` on ```pca10056``` and ```mbedtls``` elsewhere. See **Crypto backend** below.
+* ```HUBBLE_CRYPTO```: crypto backend (optional). One of ```cc310```, ```nrf```, ```oberon```, ```mbedtls```. Defaults to ```cc310``` on ```pca10056``` and ```mbedtls``` elsewhere. See **Crypto backend** below.
 * ```NRF_CRYPTO_BACKEND```: backend used when ```HUBBLE_CRYPTO=nrf``` (optional). One of ```cc310```, ```mbedtls```. Defaults to ```cc310``` on ```pca10056``` and ```mbedtls``` elsewhere.
 
 ### Supported boards
@@ -164,6 +164,7 @@ it on any ```make``` invocation. The default is ```cc310``` on ```pca10056``` an
 |---|---|---|---|
 | ```cc310``` | Direct CryptoCell (```SaSi_Aes*```) driver | AES-256 | ```pca10056``` only |
 | ```nrf``` | nRF5 SDK ```nrf_crypto``` wrapper API | AES-128 | any (backend-dependent) |
+| ```oberon``` | Prebuilt Oberon ```ocrypto``` software library | AES-256 | any |
 | ```mbedtls``` | Raw mbedTLS software | AES-256 | any |
 
 * ```cc310``` and ```nrf``` (with its CryptoCell backend) both run on the nRF52840's
@@ -173,7 +174,10 @@ it on any ```make``` invocation. The default is ```cc310``` on ```pca10056``` an
   the SDK's mutex, RAM-location check, and DMA chunking. It is locked to a 128-bit
   key because the ```nrf_crypto``` backends only register 128-bit AES-CTR/CMAC
   descriptors.
-* ```mbedtls``` is pure software and works on any board. It is the only option on
+* ```oberon``` calls the prebuilt Oberon ```ocrypto_aes_*``` functions directly (no
+  ```nrf_crypto``` wrapper, no runtime init). It is pure software, works on any
+  board, and pulls in far less code than the full mbedTLS cipher family.
+* ```mbedtls``` is pure software and works on any board. It is the default on
   ```pca10040```.
 
 When ```HUBBLE_CRYPTO=nrf```, ```NRF_CRYPTO_BACKEND``` chooses which backend
@@ -199,9 +203,9 @@ make BOARD=pca10040 GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=10.3 KEY=<BA
   HUBBLE_CRYPTO=mbedtls
 ```
 
-> **The key size differs by backend.** ```cc310``` and ```mbedtls``` use AES-256;
-> ```nrf``` uses AES-128. The base64 ```KEY``` you pass is the same, but make sure
-> the backend you build matches how your device is registered with Hubble.
+> **The key size differs by backend.** ```cc310```, ```oberon```, and ```mbedtls```
+> use AES-256; ```nrf``` uses AES-128. The base64 ```KEY``` you pass is the same, but
+> make sure the backend you build matches how your device is registered with Hubble.
 
 ## Flashing
 Flash the SoftDevice (once per board/SoftDevice version):
@@ -271,6 +275,7 @@ This application depends on:
     - ```mbedtls``` - software mbedTLS
     - ```cc310``` - the nRF52840 CryptoCell hardware driver (```nrf_cc310``` prebuilt library)
     - ```nrf``` - the SDK's ```nrf_crypto``` wrapper over either CryptoCell or mbedTLS
+    - ```oberon``` - the prebuilt Oberon ```ocrypto``` software library (```nrf_oberon```)
 
 ## Troubleshooting
 * **Build errors referencing toolchain**: confirm ```GNU_INSTALL_ROOT``` and ```GNU_VERSION``` are correct and GCC is installed.
