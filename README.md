@@ -162,7 +162,7 @@ it on any ```make``` invocation. The default is ```cc310``` on ```pca10056``` an
 
 | ```HUBBLE_CRYPTO``` | Implementation | AES key size | Boards |
 |---|---|---|---|
-| ```cc310``` | Direct CryptoCell (```SaSi_Aes*```) driver | AES-256 | ```pca10056``` only |
+| ```cc310``` | Direct CryptoCell (```SaSi_Aes*```) driver | AES-128 | ```pca10056``` only |
 | ```nrf``` | nRF5 SDK ```nrf_crypto``` wrapper API | AES-128 | any (backend-dependent) |
 | ```oberon``` | Prebuilt Oberon ```ocrypto``` software library | AES-256 | any |
 | ```mbedtls``` | Raw mbedTLS software | AES-256 | any |
@@ -203,8 +203,8 @@ make BOARD=pca10040 GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=10.3 KEY=<BA
   HUBBLE_CRYPTO=mbedtls
 ```
 
-> **The key size differs by backend.** ```cc310```, ```oberon```, and ```mbedtls```
-> use AES-256; ```nrf``` uses AES-128. The base64 ```KEY``` you pass is the same, but
+> **The key size differs by backend.** ```oberon``` and ```mbedtls``` use AES-256;
+> ```cc310``` and ```nrf``` use AES-128. The base64 ```KEY``` you pass is the same, but
 > make sure the backend you build matches how your device is registered with Hubble.
 
 ## Flashing

@@ -47,7 +47,7 @@ INC_FOLDERS += \
 # HUBBLE_CRYPTO picks the crypto implementation. Override on the command line
 # with `make HUBBLE_CRYPTO=<name>`. Valid values:
 #
-#   cc310    - Direct CryptoCell (SaSi_Aes*) driver. AES-256. Requires pca10056
+#   cc310    - Direct CryptoCell (SaSi_Aes*) driver. AES-128. Requires pca10056
 #              (nRF52840 has the CryptoCell hardware; nRF52832 does not).
 #   nrf      - nRF5 SDK nrf_crypto wrapper over the CC310 backend. AES-128.
 #              Requires pca10056. Same hardware path as `cc310`, but uses the
@@ -77,9 +77,9 @@ endif
 
 ifeq ($(HUBBLE_CRYPTO),cc310)
 
-# ---- cc310: raw SaSi_Aes* driver, AES-256 --------------------------------
-CFLAGS += -DCONFIG_HUBBLE_KEY_SIZE=32
-CFLAGS += -DCONFIG_HUBBLE_NETWORK_KEY_256
+# ---- cc310: raw SaSi_Aes* driver, AES-128 --------------------------------
+CFLAGS += -DCONFIG_HUBBLE_KEY_SIZE=16
+CFLAGS += -DCONFIG_HUBBLE_NETWORK_KEY_128
 
 # sdk_config.h #ifndef-guards each of these, so defining them here overrides
 # the defaults:

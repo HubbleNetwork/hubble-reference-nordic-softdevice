@@ -16,8 +16,8 @@
 #include <hubble/ble.h>
 #include <hubble/port/crypto.h>
 
-#if !defined(CONFIG_HUBBLE_NETWORK_KEY_256) || (CONFIG_HUBBLE_KEY_SIZE != 32)
-#error "CC310 backend here is wired for a 256-bit Hubble key"
+#if !defined(CONFIG_HUBBLE_NETWORK_KEY_128) || (CONFIG_HUBBLE_KEY_SIZE != 16)
+#error "CC310 backend requires a 128-bit Hubble key; 256-bit keys are not supported."
 #endif
 
 int hubble_crypto_init(void)
@@ -52,7 +52,7 @@ int hubble_crypto_aes_ctr(const uint8_t key[CONFIG_HUBBLE_KEY_SIZE],
 	}
 
 	key_data.pKey = (uint8_t *)key;
-	key_data.keySize = CONFIG_HUBBLE_KEY_SIZE; /* 32 bytes -> AES-256 */
+	key_data.keySize = CONFIG_HUBBLE_KEY_SIZE; /* 16 bytes -> AES-128 */
 
 	rc = SaSi_AesSetKey(&ctx, SASI_AES_USER_KEY, &key_data,
 			    sizeof(key_data));
@@ -94,7 +94,7 @@ int hubble_crypto_cmac(const uint8_t key[CONFIG_HUBBLE_KEY_SIZE],
 	}
 
 	key_data.pKey = (uint8_t *)key;
-	key_data.keySize = CONFIG_HUBBLE_KEY_SIZE; /* 32 bytes -> AES-256 */
+	key_data.keySize = CONFIG_HUBBLE_KEY_SIZE; /* 16 bytes -> AES-128 */
 
 	rc = SaSi_AesSetKey(&ctx, SASI_AES_USER_KEY, &key_data,
 			    sizeof(key_data));
