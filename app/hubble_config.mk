@@ -47,7 +47,7 @@ INC_FOLDERS += \
 # HUBBLE_CRYPTO picks the crypto implementation. Override on the command line
 # with `make HUBBLE_CRYPTO=<name>`. Valid values:
 #
-#   cc310    - Direct CryptoCell (SaSi_Aes*) driver. AES-256. Requires pca10056
+#   cc310    - Direct CryptoCell (SaSi_Aes*) driver. AES-128. Requires pca10056
 #              (nRF52840 has the CryptoCell hardware; nRF52832 does not).
 #   nrf      - nRF5 SDK nrf_crypto wrapper over the CC310 backend. AES-128.
 #              Requires pca10056. Same hardware path as `cc310`, but uses the
@@ -56,16 +56,11 @@ INC_FOLDERS += \
 #   oberon   - Prebuilt Oberon ocrypto software library (AES-256). Any board.
 #              Raw ocrypto_aes_* calls, no nrf_crypto wrapper; smaller than the
 #              full mbedTLS cipher family.
-#   mbedtls  - Raw mbedTLS software. AES-256. Any board. Only option on
-#              pca10040 (no CryptoCell).
+#   mbedtls  - Raw mbedTLS software. AES-256. Any board.
 #
-# Default per board: cc310 on pca10056, mbedtls elsewhere.
+# Default: mbedtls on every board.
 # ----------------------------------------------------------------------------
-ifeq ($(BOARD),pca10056)
-HUBBLE_CRYPTO ?= cc310
-else
 HUBBLE_CRYPTO ?= mbedtls
-endif
 
 # The raw-SaSi cc310 path always needs the CryptoCell hardware. (HUBBLE_CRYPTO=nrf
 # only needs it when NRF_CRYPTO_BACKEND=cc310; that check lives in the nrf branch.)
@@ -77,9 +72,9 @@ endif
 
 ifeq ($(HUBBLE_CRYPTO),cc310)
 
-# ---- cc310: raw SaSi_Aes* driver, AES-256 --------------------------------
-CFLAGS += -DCONFIG_HUBBLE_KEY_SIZE=32
-CFLAGS += -DCONFIG_HUBBLE_NETWORK_KEY_256
+# ---- cc310: raw SaSi_Aes* driver, AES-128 --------------------------------
+CFLAGS += -DCONFIG_HUBBLE_KEY_SIZE=16
+CFLAGS += -DCONFIG_HUBBLE_NETWORK_KEY_128
 
 # sdk_config.h #ifndef-guards each of these, so defining them here overrides
 # the defaults:

@@ -43,7 +43,7 @@ README
     nRF5 SDK (compatible version used during development). If you vendor the SDK locally, configure your paths accordingly.
 * **A SoftDevice HEX** compatible with your SoC (e.g., S132 for nRF52832, S140 for nRF52840).
 * **Python 3** and ```pyhubblenetwork``` (for quick verification).
-* **A Hubble device key** (base64) obtained from the Hubble console — this is passed as KEY to the Makefile. The existing README expects a base64 key; preserve that format.
+* **A Hubble device key** (base64) obtained from the Hubble console — this is passed as KEY to the Makefile. The existing README expects a base64 key; preserve that format. See [Crypto backend](#crypto-backend) for details on the correct key configuration.
 
 
 ## Build
@@ -58,7 +58,7 @@ make GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=<GNU_VERSION> KEY=<BASE64_K
 * ```GNU_VERSION```: the GCC toolchain version string (e.g., 10.3).
 * ```KEY```: your base64-encoded Hubble device key obtained when registering your device with Hubble.
 * ```BOARD```: target board (optional, defaults to ```pca10056```).
-* ```HUBBLE_CRYPTO```: crypto backend (optional). One of ```cc310```, ```nrf```, ```oberon```, ```mbedtls```. Defaults to ```cc310``` on ```pca10056``` and ```mbedtls``` elsewhere. See **Crypto backend** below.
+* ```HUBBLE_CRYPTO```: crypto backend (optional). One of ```cc310```, ```nrf```, ```oberon```, ```mbedtls```. Defaults to ```mbedtls``` on every board. See **Crypto backend** below.
 * ```NRF_CRYPTO_BACKEND```: backend used when ```HUBBLE_CRYPTO=nrf``` (optional). One of ```cc310```, ```mbedtls```. Defaults to ```cc310``` on ```pca10056``` and ```mbedtls``` elsewhere.
 
 ### Supported boards
@@ -157,12 +157,11 @@ operation.
 ### Crypto backend
 
 ```HUBBLE_CRYPTO``` selects which crypto implementation is compiled in. Override
-it on any ```make``` invocation. The default is ```cc310``` on ```pca10056``` and
-```mbedtls``` on every other board.
+it on any ```make``` invocation. The default is ```mbedtls``` on every board.
 
 | ```HUBBLE_CRYPTO``` | Implementation | AES key size | Boards |
 |---|---|---|---|
-| ```cc310``` | Direct CryptoCell (```SaSi_Aes*```) driver | AES-256 | ```pca10056``` only |
+| ```cc310``` | Direct CryptoCell (```SaSi_Aes*```) driver | AES-128 | ```pca10056``` only |
 | ```nrf``` | nRF5 SDK ```nrf_crypto``` wrapper API | AES-128 | any (backend-dependent) |
 | ```oberon``` | Prebuilt Oberon ```ocrypto``` software library | AES-256 | any |
 | ```mbedtls``` | Raw mbedTLS software | AES-256 | any |
@@ -178,7 +177,7 @@ it on any ```make``` invocation. The default is ```cc310``` on ```pca10056``` an
   ```nrf_crypto``` wrapper, no runtime init). It is pure software, works on any
   board, and pulls in far less code than the full mbedTLS cipher family.
 * ```mbedtls``` is pure software and works on any board. It is the default on
-  ```pca10040```.
+  every board.
 
 When ```HUBBLE_CRYPTO=nrf```, ```NRF_CRYPTO_BACKEND``` chooses which backend
 actually implements the AES primitives:
@@ -203,8 +202,8 @@ make BOARD=pca10040 GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=10.3 KEY=<BA
   HUBBLE_CRYPTO=mbedtls
 ```
 
-> **The key size differs by backend.** ```cc310```, ```oberon```, and ```mbedtls```
-> use AES-256; ```nrf``` uses AES-128. The base64 ```KEY``` you pass is the same, but
+> **The key size differs by backend.** ```oberon``` and ```mbedtls``` use AES-256;
+> ```cc310``` and ```nrf``` use AES-128. The base64 ```KEY``` you pass is the same, but
 > make sure the backend you build matches how your device is registered with Hubble.
 
 ## Flashing
