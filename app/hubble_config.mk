@@ -56,16 +56,11 @@ INC_FOLDERS += \
 #   oberon   - Prebuilt Oberon ocrypto software library (AES-256). Any board.
 #              Raw ocrypto_aes_* calls, no nrf_crypto wrapper; smaller than the
 #              full mbedTLS cipher family.
-#   mbedtls  - Raw mbedTLS software. AES-256. Any board. Only option on
-#              pca10040 (no CryptoCell).
+#   mbedtls  - Raw mbedTLS software. AES-256. Any board.
 #
-# Default per board: cc310 on pca10056, mbedtls elsewhere.
+# Default: mbedtls on every board.
 # ----------------------------------------------------------------------------
-ifeq ($(BOARD),pca10056)
-HUBBLE_CRYPTO ?= cc310
-else
 HUBBLE_CRYPTO ?= mbedtls
-endif
 
 # The raw-SaSi cc310 path always needs the CryptoCell hardware. (HUBBLE_CRYPTO=nrf
 # only needs it when NRF_CRYPTO_BACKEND=cc310; that check lives in the nrf branch.)

@@ -58,7 +58,7 @@ make GNU_INSTALL_ROOT=<GNU_INSTALL_ROOT> GNU_VERSION=<GNU_VERSION> KEY=<BASE64_K
 * ```GNU_VERSION```: the GCC toolchain version string (e.g., 10.3).
 * ```KEY```: your base64-encoded Hubble device key obtained when registering your device with Hubble.
 * ```BOARD```: target board (optional, defaults to ```pca10056```).
-* ```HUBBLE_CRYPTO```: crypto backend (optional). One of ```cc310```, ```nrf```, ```oberon```, ```mbedtls```. Defaults to ```cc310``` on ```pca10056``` and ```mbedtls``` elsewhere. See **Crypto backend** below.
+* ```HUBBLE_CRYPTO```: crypto backend (optional). One of ```cc310```, ```nrf```, ```oberon```, ```mbedtls```. Defaults to ```mbedtls``` on every board. See **Crypto backend** below.
 * ```NRF_CRYPTO_BACKEND```: backend used when ```HUBBLE_CRYPTO=nrf``` (optional). One of ```cc310```, ```mbedtls```. Defaults to ```cc310``` on ```pca10056``` and ```mbedtls``` elsewhere.
 
 ### Supported boards
@@ -157,8 +157,7 @@ operation.
 ### Crypto backend
 
 ```HUBBLE_CRYPTO``` selects which crypto implementation is compiled in. Override
-it on any ```make``` invocation. The default is ```cc310``` on ```pca10056``` and
-```mbedtls``` on every other board.
+it on any ```make``` invocation. The default is ```mbedtls``` on every board.
 
 | ```HUBBLE_CRYPTO``` | Implementation | AES key size | Boards |
 |---|---|---|---|
@@ -178,7 +177,7 @@ it on any ```make``` invocation. The default is ```cc310``` on ```pca10056``` an
   ```nrf_crypto``` wrapper, no runtime init). It is pure software, works on any
   board, and pulls in far less code than the full mbedTLS cipher family.
 * ```mbedtls``` is pure software and works on any board. It is the default on
-  ```pca10040```.
+  every board.
 
 When ```HUBBLE_CRYPTO=nrf```, ```NRF_CRYPTO_BACKEND``` chooses which backend
 actually implements the AES primitives:
