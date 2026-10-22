@@ -43,7 +43,7 @@ README
     nRF5 SDK (compatible version used during development). If you vendor the SDK locally, configure your paths accordingly.
 * **A SoftDevice HEX** compatible with your SoC (e.g., S132 for nRF52832, S140 for nRF52840).
 * **Python 3** and ```pyhubblenetwork``` (for quick verification).
-* **A Hubble device key** (base64) obtained from the Hubble console — this is passed as KEY to the Makefile. The existing README expects a base64 key; preserve that format.
+* **A Hubble device key** (base64) obtained from the Hubble console — this is passed as KEY to the Makefile. The existing README expects a base64 key; preserve that format. See [Crypto backend](#crypto-backend) for details on the correct key configuration.
 
 
 ## Build
