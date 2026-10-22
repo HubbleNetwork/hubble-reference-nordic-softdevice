@@ -222,7 +222,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/nfc/ndef/conn_hand_parser/ac_rec_parser \
   $(SDK_ROOT)/components/libraries/stack_guard \
   $(SDK_ROOT)/components/libraries/log/src \
-  $(PROJ_DIR)/ \
+  $(PROJ_DIR) \
 
 # Libraries common to all targets
 LIB_FILES += \
